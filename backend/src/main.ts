@@ -23,16 +23,16 @@ async function bootstrap() {
   app.useGlobalFilters(new HttpExceptionFilter());
 
   // Configure CORS for frontend access
-  const allowedOrigin = process.env.FRONTEND_URL || 'http://localhost:5173';
+  const allowedOrigin = process.env.FRONTEND_URL;
   app.enableCors({
-    origin: process.env.NODE_ENV === 'production' ? allowedOrigin : true,
+    origin: allowedOrigin ? allowedOrigin.split(',').map((o) => o.trim()) : true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
 
   const port = process.env.PORT || 3000;
-  await app.listen(port);
-  logger.log(`Job Queue Backend service is running on: http://localhost:${port}`);
+  await app.listen(port, '0.0.0.0');
+  logger.log(`Job Queue Backend service is running on: http://0.0.0.0:${port}`);
 }
 
 bootstrap();
