@@ -1,4 +1,4 @@
-# Mini Job Queue Dashboard
+# QueueSync — Mini Job Queue Dashboard
 
 A production-ready full-stack Job Queue Management Dashboard built with **NestJS**, **PostgreSQL**, **TypeORM**, and **React (Vite + TypeScript + Tailwind CSS)**. This project demonstrates enterprise-level API design, strict state-machine lifecycle enforcement, atomic conditional updates for race-condition prevention, responsive UI ergonomics, and error handling.
 
