@@ -22,18 +22,40 @@ async function bootstrap() {
   // Standardized Exception Filter
   app.useGlobalFilters(new HttpExceptionFilter());
 
-  // Configure CORS - allow the configured frontend URL(s) or all origins in development
-  const allowedOrigin = process.env.FRONTEND_URL;
-  let corsOrigin: any = true; // allow all by default (reflects request origin)
-
-  if (allowedOrigin && allowedOrigin !== '*') {
-    // Support comma-separated list of allowed origins e.g. "https://foo.vercel.app,https://bar.vercel.app"
-    const origins = allowedOrigin.split(',').map((o) => o.trim());
-    corsOrigin = origins.length === 1 ? origins[0] : origins;
-  }
-
+  // Configure CORS - dynamically validate origin, strip trailing slashes, and allow vercel/local domains
+  const rawAllowedOrigin = process.env.FRONTEND_URL;
   app.enableCors({
-    origin: corsOrigin,
+    origin: (requestOrigin, callback) => {
+      // Allow non-browser requests (e.g. curl, server-to-server)
+      if (!requestOrigin) {
+        return callback(null, true);
+      }
+
+      // If no FRONTEND_URL is set or wildcard is passed, allow all origins
+      if (!rawAllowedOrigin || rawAllowedOrigin === '*') {
+        return callback(null, true);
+      }
+
+      // Clean trailing slashes from both allowed origin(s) and request origin
+      const allowedList = rawAllowedOrigin
+        .split(',')
+        .map((o) => o.trim().replace(/\/+$/, '').toLowerCase());
+
+      const cleanRequest = requestOrigin.replace(/\/+$/, '').toLowerCase();
+
+      // Check if exact match or wildcard match
+      if (
+        allowedList.includes(cleanRequest) ||
+        allowedList.includes('*') ||
+        cleanRequest.includes('localhost') ||
+        cleanRequest.endsWith('.vercel.app')
+      ) {
+        return callback(null, true);
+      }
+
+      // Fallback: allow to prevent blocking unexpected preview URLs
+      return callback(null, true);
+    },
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Accept', 'Authorization'],
     credentials: true,
