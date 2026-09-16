@@ -22,11 +22,20 @@ async function bootstrap() {
   // Standardized Exception Filter
   app.useGlobalFilters(new HttpExceptionFilter());
 
-  // Configure CORS for frontend access
+  // Configure CORS - allow the configured frontend URL(s) or all origins in development
   const allowedOrigin = process.env.FRONTEND_URL;
+  let corsOrigin: any = true; // allow all by default (reflects request origin)
+
+  if (allowedOrigin && allowedOrigin !== '*') {
+    // Support comma-separated list of allowed origins e.g. "https://foo.vercel.app,https://bar.vercel.app"
+    const origins = allowedOrigin.split(',').map((o) => o.trim());
+    corsOrigin = origins.length === 1 ? origins[0] : origins;
+  }
+
   app.enableCors({
-    origin: allowedOrigin ? allowedOrigin.split(',').map((o) => o.trim()) : true,
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    origin: corsOrigin,
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Accept', 'Authorization'],
     credentials: true,
   });
 
